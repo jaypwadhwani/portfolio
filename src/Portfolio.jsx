@@ -457,7 +457,7 @@ const Portfolio = () => {
     return (
       <section 
         data-section="work"
-        className={`min-h-screen px-6 py-16 pb-0 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
@@ -793,7 +793,7 @@ const Portfolio = () => {
             </div>
           )}
         </div>
-        <div className="pt-16">
+        <div className="pt-16 -mx-6">
           <SimpleFooter />
         </div>
       </section>
@@ -805,7 +805,7 @@ const Portfolio = () => {
     return (
       <section 
         data-section="ai-projects"
-        className={`min-h-screen px-6 py-16 pb-0 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
@@ -974,7 +974,7 @@ const Portfolio = () => {
           </div>
         </div>
       </div>
-      <div className="pt-16">
+      <div className="pt-16 -mx-6">
         <SimpleFooter />
       </div>
     </section>
@@ -986,7 +986,7 @@ const Portfolio = () => {
     return (
       <section 
         data-section="about"
-        className={`min-h-screen px-6 py-16 pb-0 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
@@ -1092,7 +1092,7 @@ const Portfolio = () => {
             </div>
           </div>
         </div>
-        <div className="pt-16">
+        <div className="pt-16 -mx-6">
           <SimpleFooter />
         </div>
       </section>
@@ -1170,7 +1170,7 @@ const Portfolio = () => {
   );
 
   const SimpleFooter = () => (
-    <footer className="py-6 px-6" style={{ backgroundColor: '#001F3F', color: '#FFFFFF' }}>
+    <footer className="py-6 px-6 w-full" style={{ backgroundColor: '#001F3F', color: '#FFFFFF' }}>
       <div className="max-w-7xl mx-auto text-center">
         <p className="text-sm italic" style={{ color: '#E6F0F8' }}>
           "Everything should be made as simple as possible, but not simpler," – Albert Einstein

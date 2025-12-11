@@ -390,46 +390,46 @@ const Portfolio = () => {
       >
         <div className="max-w-6xl mx-auto w-full">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h1 className="text-6xl md:text-8xl font-bold tracking-tight leading-none" style={{ color: '#001F3F' }}>
-                  Building products<br />
-                  <span className="italic font-light">that connect people</span>
-                </h1>
-                <p className="text-xl md:text-2xl max-w-3xl leading-relaxed" style={{ color: '#5A7A9A' }}>
-                  Product leader with 12+ years of 0→1 and growth experience at Instagram, LinkedIn, and IBM, creating scalable, user-obsessed solutions across consumer, e-commerce, and AI.
-                </p>
-              </div>
-              
-              <div className="flex flex-wrap gap-4 pt-4">
-                <button 
-                  onClick={() => handleSectionChange('work')} 
-                  className="px-8 py-4 text-white transition-all duration-200 ease-in-out flex items-center gap-2 group"
-                  style={{ backgroundColor: '#001F3F' }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#003366'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#001F3F'}
-                >
-                  View My Work →
-                </button>
-                <button 
-                  onClick={() => handleSectionChange('ai-projects')} 
-                  className="px-8 py-4 border-2 transition-all duration-200 ease-in-out"
-                  style={{ 
-                    borderColor: '#001F3F',
-                    color: '#001F3F',
-                    backgroundColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#001F3F';
-                    e.target.style.color = '#FFFFFF';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = '#001F3F';
-                  }}
-                >
-                  AI Projects
-                </button>
+          <div className="space-y-8">
+            <div className="space-y-4">
+            <h1 className="text-6xl md:text-8xl font-bold tracking-tight leading-none" style={{ color: '#001F3F' }}>
+              Building products<br />
+              <span className="italic font-light">that connect people</span>
+            </h1>
+            <p className="text-xl md:text-2xl max-w-3xl leading-relaxed" style={{ color: '#5A7A9A' }}>
+              Product leader with 12+ years of 0→1 and growth experience at Instagram, LinkedIn, and IBM, creating scalable, user-obsessed solutions across consumer, e-commerce, and AI.
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap gap-4 pt-4">
+            <button 
+              onClick={() => handleSectionChange('work')} 
+              className="px-8 py-4 text-white transition-all duration-200 ease-in-out flex items-center gap-2 group"
+              style={{ backgroundColor: '#001F3F' }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#003366'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#001F3F'}
+            >
+              View My Work →
+            </button>
+            <button 
+              onClick={() => handleSectionChange('ai-projects')} 
+              className="px-8 py-4 border-2 transition-all duration-200 ease-in-out"
+              style={{ 
+                borderColor: '#001F3F',
+                color: '#001F3F',
+                backgroundColor: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#001F3F';
+                e.target.style.color = '#FFFFFF';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+                e.target.style.color = '#001F3F';
+              }}
+            >
+              AI Projects
+            </button>
               </div>
             </div>
             <div className="hidden md:flex justify-center items-center">
@@ -441,7 +441,7 @@ const Portfolio = () => {
                   style={{ border: '2px solid #001F3F' }}
                 />
               </div>
-            </div>
+          </div>
           </div>
         </div>
       </section>
@@ -635,17 +635,17 @@ const Portfolio = () => {
                                 cursor: 'pointer',
                               }}
                               onClick={(e) => e.stopPropagation()}
-                            >
-                              <img
-                                src={project.image}
-                                alt={`${project.company} project screenshot`}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'cover',
-                                  objectPosition: 'top',
-                                }}
-                              />
+                        >
+                          <img
+                            src={project.image}
+                            alt={`${project.company} project screenshot`}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'top',
+                            }}
+                          />
                             </a>
                           ) : (
                             <img
@@ -987,6 +987,20 @@ const Portfolio = () => {
             <div className="space-y-6 text-lg leading-relaxed" style={{ color: '#5A7A9A' }}>
               <p>I'm a product manager who loves <strong style={{ color: '#001F3F' }}>connecting people through product</strong>. I thrive in ambiguity and enjoy building intuitive experiences that meaningfully improve people's lives. I began my career as a founder of a social platform, scaling it to 100k users and 70M profiles. I later brought that entrepreneurial approach to roles at LinkedIn, Instagram, and Macy's, where I led multimillion-dollar initiatives like the Company Page creation flow and the virtual try-on roadmap during the pandemic.</p>
               <p>Over the past year, I shifted into consulting to support my wife as we welcomed our first child. I have been partnering with companies on AI adoption, mobile app redesigns, and modernization of internal platforms. Now that we have more family support, I'm excited to transition back into a full-time product leadership role where I can blend user empathy, business rigor, and technical depth to shape the next generation of consumer and enterprise experiences.</p>
+            </div>
+            
+            <div className="pt-8">
+              <div className="relative inline-block">
+                <img 
+                  src="/images/family.jpg" 
+                  alt="Family photo" 
+                  className="w-full max-w-md rounded-lg object-cover"
+                  style={{ 
+                    border: '3px solid #001F3F',
+                    boxShadow: '0 10px 30px -5px rgba(0, 31, 63, 0.3), 0 4px 6px -2px rgba(0, 31, 63, 0.1)',
+                  }}
+                />
+              </div>
             </div>
           </div>
 

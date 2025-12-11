@@ -1052,6 +1052,23 @@ const Portfolio = () => {
             </div>
 
             <div className="pt-8">
+              <h3 className="text-2xl font-bold mb-4" style={{ color: '#001F3F' }}>Download Resume</h3>
+              <a 
+                href="/resume.pdf" 
+                download="Jay_Wadhwani_Resume.pdf"
+                className="inline-flex items-center gap-2 px-6 py-3 text-white transition-colors duration-200"
+                style={{ backgroundColor: '#001F3F' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#003366'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#001F3F'}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF
+              </a>
+            </div>
+
+            <div className="pt-8">
               <h3 className="text-2xl font-bold mb-4" style={{ color: '#001F3F' }}>Let's Connect</h3>
               <div className="flex gap-4">
                 <a 

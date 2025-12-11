@@ -386,10 +386,11 @@ const Portfolio = () => {
     const isActive = activeSection === 'home';
     return (
       <section 
-        className={`min-h-screen flex items-center justify-center px-6 pt-20 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen flex flex-col px-6 pt-20 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
-        <div className="max-w-6xl mx-auto w-full">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-6xl mx-auto w-full flex-1 flex items-center">
+          <div className="grid md:grid-cols-2 gap-12 items-center w-full">
           <div className="space-y-8">
             <div className="space-y-4">
             <h1 className="text-6xl md:text-8xl font-bold tracking-tight leading-none" style={{ color: '#001F3F' }}>
@@ -444,6 +445,9 @@ const Portfolio = () => {
           </div>
           </div>
         </div>
+        <div className="mt-auto pt-16">
+          <Footer />
+        </div>
       </section>
     );
   };
@@ -453,7 +457,7 @@ const Portfolio = () => {
     return (
       <section 
         data-section="work"
-        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-6 py-16 pb-0 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
@@ -789,6 +793,7 @@ const Portfolio = () => {
             </div>
           )}
         </div>
+        <Footer />
       </section>
     );
   };
@@ -798,7 +803,7 @@ const Portfolio = () => {
     return (
       <section 
         data-section="ai-projects"
-        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-6 py-16 pb-0 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
@@ -967,6 +972,7 @@ const Portfolio = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </section>
     );
   };
@@ -976,7 +982,7 @@ const Portfolio = () => {
     return (
       <section 
         data-section="about"
-        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-6 py-16 pb-0 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
@@ -1082,6 +1088,7 @@ const Portfolio = () => {
             </div>
           </div>
         </div>
+        <Footer />
       </section>
     );
   };
@@ -1165,7 +1172,6 @@ const Portfolio = () => {
         <AIProjects />
         <About />
       </div>
-      {activeSection === 'home' && <Footer />}
     </div>
   );
 };

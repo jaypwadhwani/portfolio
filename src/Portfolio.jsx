@@ -737,8 +737,8 @@ const Portfolio = () => {
           </div>
 
           {selectedProject && (
-            <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 animate-fadeIn" onClick={() => setSelectedProject(null)} style={{ animation: 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)', backgroundColor: 'rgba(0, 31, 63, 0.8)' }}>
-              <div className="bg-white max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:p-12 transform transition-all duration-300 ease-out" style={{ animation: 'fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }} onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 animate-fadeIn" onClick={() => setSelectedProject(null)} style={{ animation: 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)', backgroundColor: 'rgba(0, 31, 63, 0.8)', overflow: 'hidden' }}>
+              <div className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:p-12 transform transition-all duration-300 ease-out rounded-lg" style={{ animation: 'fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }} onClick={(e) => e.stopPropagation()}>
                 <button onClick={() => setSelectedProject(null)} className="float-right text-2xl sm:text-3xl hover:opacity-70 transition-opacity duration-200 mb-3 sm:mb-4" style={{ color: '#001F3F' }}>✕</button>
 
                 <div className="space-y-6 sm:space-y-8">

@@ -793,7 +793,9 @@ const Portfolio = () => {
             </div>
           )}
         </div>
-        <Footer />
+        <div className="pt-16">
+          <SimpleFooter />
+        </div>
       </section>
     );
   };
@@ -972,7 +974,9 @@ const Portfolio = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      <div className="pt-16">
+        <SimpleFooter />
+      </div>
     </section>
     );
   };
@@ -1088,7 +1092,9 @@ const Portfolio = () => {
             </div>
           </div>
         </div>
-        <Footer />
+        <div className="pt-16">
+          <SimpleFooter />
+        </div>
       </section>
     );
   };
@@ -1159,6 +1165,16 @@ const Portfolio = () => {
         <div className="border-t pt-8 text-center" style={{ borderColor: '#003366', color: '#E6F0F8' }}>
           <p>© 2024 Jay Wadhwani. Built with React and Claude.</p>
         </div>
+      </div>
+    </footer>
+  );
+
+  const SimpleFooter = () => (
+    <footer className="py-6 px-6" style={{ backgroundColor: '#001F3F', color: '#FFFFFF' }}>
+      <div className="max-w-7xl mx-auto text-center">
+        <p className="text-sm italic" style={{ color: '#E6F0F8' }}>
+          "Everything should be made as simple as possible, but not simpler," – Albert Einstein
+        </p>
       </div>
     </footer>
   );

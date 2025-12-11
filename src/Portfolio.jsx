@@ -386,26 +386,26 @@ const Portfolio = () => {
     const isActive = activeSection === 'home';
     return (
       <section 
-        className={`min-h-screen flex flex-col px-6 pt-20 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen flex flex-col px-4 sm:px-6 pt-16 sm:pt-20 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-6xl mx-auto w-full flex-1 flex items-center">
           <div className="grid md:grid-cols-2 gap-12 items-center w-full">
           <div className="space-y-8">
             <div className="space-y-4">
-            <h1 className="text-6xl md:text-8xl font-bold tracking-tight leading-none" style={{ color: '#001F3F' }}>
+            <h1 className="text-4xl sm:text-5xl md:text-8xl font-bold tracking-tight leading-tight" style={{ color: '#001F3F' }}>
               Building products<br />
               <span className="italic font-light">that connect people</span>
             </h1>
-            <p className="text-xl md:text-2xl max-w-3xl leading-relaxed" style={{ color: '#5A7A9A' }}>
+            <p className="text-base sm:text-lg md:text-2xl max-w-3xl leading-relaxed" style={{ color: '#5A7A9A' }}>
               Product leader with 12+ years of 0→1 and growth experience at Instagram, LinkedIn, and IBM, creating scalable, user-obsessed solutions across consumer, e-commerce, and AI.
             </p>
           </div>
           
-          <div className="flex flex-wrap gap-4 pt-4">
+          <div className="flex flex-wrap gap-3 sm:gap-4 pt-4">
             <button 
               onClick={() => handleSectionChange('work')} 
-              className="px-8 py-4 text-white transition-all duration-200 ease-in-out flex items-center gap-2 group"
+              className="px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base text-white transition-all duration-200 ease-in-out flex items-center gap-2 group"
               style={{ backgroundColor: '#001F3F' }}
               onMouseEnter={(e) => e.target.style.backgroundColor = '#003366'}
               onMouseLeave={(e) => e.target.style.backgroundColor = '#001F3F'}
@@ -414,7 +414,7 @@ const Portfolio = () => {
             </button>
             <button 
               onClick={() => handleSectionChange('ai-projects')} 
-              className="px-8 py-4 border-2 transition-all duration-200 ease-in-out"
+              className="px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base border-2 transition-all duration-200 ease-in-out"
               style={{ 
                 borderColor: '#001F3F',
                 color: '#001F3F',
@@ -445,7 +445,7 @@ const Portfolio = () => {
           </div>
           </div>
         </div>
-        <div className="mt-auto pt-16">
+        <div className="mt-auto pt-8 sm:pt-12 md:pt-16">
           <Footer />
         </div>
       </section>
@@ -457,13 +457,13 @@ const Portfolio = () => {
     return (
       <section 
         data-section="work"
-        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-4 sm:px-6 py-8 sm:py-12 md:py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="mb-20">
-            <h2 className="text-5xl md:text-7xl font-bold mb-6" style={{ color: '#001F3F' }}>Featured Work</h2>
-            <p className="text-xl max-w-3xl" style={{ color: '#5A7A9A' }}>
+          <div className="mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6" style={{ color: '#001F3F' }}>Featured Work</h2>
+            <p className="text-base sm:text-lg md:text-xl max-w-3xl" style={{ color: '#5A7A9A' }}>
               From accelerating growth at Meta to launching 0→1 products in fast-moving startups, these projects showcase how I turn insights into measurable business and user impact.
             </p>
           </div>
@@ -472,7 +472,7 @@ const Portfolio = () => {
             {projects.map((project, index) => (
               <div 
                 key={index} 
-                className="group cursor-pointer border-2 p-8 bg-white transition-all duration-300 ease-in-out transform hover:scale-[1.02]" 
+                className="group cursor-pointer border-2 p-4 sm:p-6 md:p-8 bg-white transition-all duration-300 ease-in-out transform hover:scale-[1.02]" 
                 style={{ borderColor: '#001F3F' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#001F3F';
@@ -737,11 +737,11 @@ const Portfolio = () => {
           </div>
 
           {selectedProject && (
-            <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fadeIn" onClick={() => setSelectedProject(null)} style={{ animation: 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)', backgroundColor: 'rgba(0, 31, 63, 0.8)' }}>
-              <div className="bg-white max-w-4xl max-h-[90vh] overflow-y-auto p-8 md:p-12 transform transition-all duration-300 ease-out" style={{ animation: 'fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }} onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => setSelectedProject(null)} className="float-right text-3xl hover:opacity-70 transition-opacity duration-200 mb-4" style={{ color: '#001F3F' }}>✕</button>
+            <div className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 animate-fadeIn" onClick={() => setSelectedProject(null)} style={{ animation: 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)', backgroundColor: 'rgba(0, 31, 63, 0.8)' }}>
+              <div className="bg-white max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 md:p-12 transform transition-all duration-300 ease-out" style={{ animation: 'fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }} onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => setSelectedProject(null)} className="float-right text-2xl sm:text-3xl hover:opacity-70 transition-opacity duration-200 mb-3 sm:mb-4" style={{ color: '#001F3F' }}>✕</button>
 
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                   <div>
                     <div className="text-lg font-bold uppercase tracking-wider mb-3 inline-block" style={{ color: '#001F3F', borderBottom: '2px solid #001F3F', paddingBottom: '4px' }}>{selectedProject.company} • {selectedProject.year}</div>
                     <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#001F3F' }}>{selectedProject.title}</h2>
@@ -805,13 +805,13 @@ const Portfolio = () => {
     return (
       <section 
         data-section="ai-projects"
-        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-4 sm:px-6 py-8 sm:py-12 md:py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="mb-20">
-            <h2 className="text-5xl md:text-7xl font-bold mb-6" style={{ color: '#001F3F' }}>AI Projects</h2>
-            <p className="text-xl max-w-3xl" style={{ color: '#5A7A9A' }}>
+          <div className="mb-12 sm:mb-20">
+            <h2 className="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6" style={{ color: '#001F3F' }}>AI Projects</h2>
+            <p className="text-base sm:text-lg md:text-xl max-w-3xl" style={{ color: '#5A7A9A' }}>
               Building AI-native tools that solve real problems. Each project is an experiment in pushing boundaries and exploring what's possible with modern AI.
             </p>
           </div>
@@ -986,15 +986,15 @@ const Portfolio = () => {
     return (
       <section 
         data-section="about"
-        className={`min-h-screen px-6 py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+        className={`min-h-screen px-4 sm:px-6 py-8 sm:py-12 md:py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
         style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-16">
-            <div className="space-y-8">
-              <h2 className="text-5xl md:text-7xl font-bold" style={{ color: '#001F3F' }}>About Me</h2>
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16">
+            <div className="space-y-6 sm:space-y-8">
+              <h2 className="text-3xl sm:text-4xl md:text-7xl font-bold" style={{ color: '#001F3F' }}>About Me</h2>
             
-            <div className="space-y-6 text-lg leading-relaxed" style={{ color: '#5A7A9A' }}>
+            <div className="space-y-4 sm:space-y-6 text-base sm:text-lg leading-relaxed" style={{ color: '#5A7A9A' }}>
               <p>I'm a product manager who loves <strong style={{ color: '#001F3F' }}>connecting people through product</strong>. I thrive in ambiguity and enjoy building intuitive experiences that meaningfully improve people's lives. I began my career as a founder of a social platform, scaling it to 100k users and 70M profiles. I later brought that entrepreneurial approach to roles at LinkedIn, Instagram, and Macy's, where I led multimillion-dollar initiatives like the Company Page creation flow and the virtual try-on roadmap during the pandemic.</p>
               <p>Over the past year, I shifted into consulting to support my wife as we welcomed our first child. I have been partnering with companies on AI adoption, mobile app redesigns, and modernization of internal platforms. Now that we have more family support, I'm excited to transition back into a full-time product leadership role where I can blend user empathy, business rigor, and technical depth to shape the next generation of consumer and enterprise experiences.</p>
             </div>
@@ -1101,21 +1101,21 @@ const Portfolio = () => {
 
 
   const Footer = () => (
-    <footer className="py-12 px-6" style={{ backgroundColor: '#001F3F', color: '#FFFFFF' }}>
+    <footer className="hidden md:block py-8 px-6" style={{ backgroundColor: '#001F3F', color: '#FFFFFF' }}>
       <div className="max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
+        <div className="grid md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-2xl font-bold mb-4">Jay Wadhwani</h3>
-            <p style={{ color: '#E6F0F8' }}>Product Management Leader that focuses on bridging the gap between user needs and artificial intelligence.</p>
+            <h3 className="text-xl font-bold mb-3">Jay Wadhwani</h3>
+            <p className="text-sm" style={{ color: '#E6F0F8' }}>Product Management Leader that focuses on bridging the gap between user needs and artificial intelligence.</p>
           </div>
           <div>
-            <h4 className="font-bold mb-3">Quick Links</h4>
+            <h4 className="font-bold mb-3 text-sm">Quick Links</h4>
             <div className="space-y-2">
               {['home', 'work', 'ai-projects', 'about'].map((section) => (
                 <button 
                   key={section} 
                   onClick={() => handleSectionChange(section)} 
-                  className="block transition-colors"
+                  className="block transition-colors text-sm"
                   style={{ color: '#E6F0F8' }}
                   onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
                   onMouseLeave={(e) => e.target.style.color = '#E6F0F8'}
@@ -1126,13 +1126,13 @@ const Portfolio = () => {
             </div>
           </div>
           <div>
-            <h4 className="font-bold mb-3">Connect</h4>
+            <h4 className="font-bold mb-3 text-sm">Connect</h4>
             <div className="space-y-2">
               <a 
                 href="https://www.linkedin.com/in/jaypwadhwani/" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="block transition-colors"
+                className="block transition-colors text-sm"
                 style={{ color: '#E6F0F8' }}
                 onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
                 onMouseLeave={(e) => e.target.style.color = '#E6F0F8'}
@@ -1143,7 +1143,7 @@ const Portfolio = () => {
                 href="https://github.com/jaypwadhwani" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="block transition-colors"
+                className="block transition-colors text-sm"
                 style={{ color: '#E6F0F8' }}
                 onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
                 onMouseLeave={(e) => e.target.style.color = '#E6F0F8'}
@@ -1152,7 +1152,7 @@ const Portfolio = () => {
               </a>
               <a 
                 href="mailto:Jay.P.Wadhwani@gmail.com" 
-                className="block transition-colors"
+                className="block transition-colors text-sm"
                 style={{ color: '#E6F0F8' }}
                 onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
                 onMouseLeave={(e) => e.target.style.color = '#E6F0F8'}
@@ -1162,17 +1162,14 @@ const Portfolio = () => {
             </div>
           </div>
         </div>
-        <div className="border-t pt-8 text-center" style={{ borderColor: '#003366', color: '#E6F0F8' }}>
-          <p>© 2024 Jay Wadhwani. Built with React and Claude.</p>
-        </div>
       </div>
     </footer>
   );
 
   const SimpleFooter = () => (
-    <footer className="py-6 px-6 w-full" style={{ backgroundColor: '#001F3F', color: '#FFFFFF' }}>
+    <footer className="py-4 sm:py-6 px-4 sm:px-6 w-full" style={{ backgroundColor: '#001F3F', color: '#FFFFFF' }}>
       <div className="max-w-7xl mx-auto text-center">
-        <p className="text-sm italic" style={{ color: '#E6F0F8' }}>
+        <p className="text-xs sm:text-sm italic leading-relaxed" style={{ color: '#E6F0F8' }}>
           "Everything should be made as simple as possible, but not simpler," – Albert Einstein
         </p>
       </div>

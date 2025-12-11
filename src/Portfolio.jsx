@@ -458,9 +458,9 @@ const Portfolio = () => {
       <section 
         data-section="work"
         className={`min-h-screen px-4 sm:px-6 py-8 sm:py-12 md:py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
-        style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
+        style={{ top: '80px', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth', touchAction: 'pan-y' }}
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto w-full">
           <div className="mb-12 sm:mb-20">
             <h2 className="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6" style={{ color: '#001F3F' }}>Featured Work</h2>
             <p className="text-base sm:text-lg md:text-xl max-w-3xl" style={{ color: '#5A7A9A' }}>
@@ -468,7 +468,7 @@ const Portfolio = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 w-full">
             {projects.map((project, index) => (
               <div 
                 key={index} 
@@ -793,7 +793,7 @@ const Portfolio = () => {
             </div>
           )}
         </div>
-        <div className="pt-16 -mx-6">
+        <div className="pt-16 -mx-4 sm:-mx-6">
           <SimpleFooter />
         </div>
       </section>
@@ -806,9 +806,9 @@ const Portfolio = () => {
       <section 
         data-section="ai-projects"
         className={`min-h-screen px-4 sm:px-6 py-8 sm:py-12 md:py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
-        style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
+        style={{ top: '80px', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth', touchAction: 'pan-y' }}
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto w-full">
           <div className="mb-12 sm:mb-20">
             <h2 className="text-3xl sm:text-4xl md:text-7xl font-bold mb-4 sm:mb-6" style={{ color: '#001F3F' }}>AI Projects</h2>
             <p className="text-base sm:text-lg md:text-xl max-w-3xl" style={{ color: '#5A7A9A' }}>
@@ -817,7 +817,7 @@ const Portfolio = () => {
           </div>
 
         <div className="mb-16 border-4 p-8 md:p-12" style={{ borderColor: '#001F3F' }}>
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid md:grid-cols-2 gap-12 w-full">
             <div className="space-y-6">
               <div>
                 <div className="text-sm uppercase tracking-wider mb-2" style={{ color: '#5A7A9A' }}>Featured Project • 2024</div>
@@ -974,7 +974,7 @@ const Portfolio = () => {
           </div>
         </div>
       </div>
-      <div className="pt-16 -mx-6">
+      <div className="pt-16 -mx-4 sm:-mx-6">
         <SimpleFooter />
       </div>
     </section>
@@ -987,10 +987,10 @@ const Portfolio = () => {
       <section 
         data-section="about"
         className={`min-h-screen px-4 sm:px-6 py-8 sm:py-12 md:py-16 absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
-        style={{ top: '80px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
+        style={{ top: '80px', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth', touchAction: 'pan-y' }}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 w-full">
             <div className="space-y-6 sm:space-y-8">
               <h2 className="text-3xl sm:text-4xl md:text-7xl font-bold" style={{ color: '#001F3F' }}>About Me</h2>
             
@@ -1092,7 +1092,7 @@ const Portfolio = () => {
             </div>
           </div>
         </div>
-        <div className="pt-16 -mx-6">
+        <div className="pt-16 -mx-4 sm:-mx-6">
           <SimpleFooter />
         </div>
       </section>
@@ -1177,9 +1177,9 @@ const Portfolio = () => {
   );
 
   return (
-    <div className="font-sans antialiased relative min-h-screen">
+    <div className="font-sans antialiased relative min-h-screen w-full overflow-x-hidden" style={{ touchAction: 'pan-y' }}>
       <Navigation />
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen w-full overflow-x-hidden">
         <Hero />
         <Work />
         <AIProjects />

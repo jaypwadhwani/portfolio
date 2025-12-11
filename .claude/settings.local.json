@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:www.macys.com)",
+      "WebFetch(domain:taskwhisper.jaypwadhwani.com)"
+    ]
+  }
+}

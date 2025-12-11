@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Layout Options for Project Cards</title>
+    <style>
+        body {
+            font-family: 'Work Sans', sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .preview-card {
+            background: white;
+            border: 2px solid #001F3F;
+            padding: 32px;
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+        .company-year {
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #001F3F;
+            border-bottom: 2px solid #001F3F;
+            padding-bottom: 4px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #001F3F;
+            margin: 12px 0 8px 0;
+        }
+        .role {
+            font-size: 14px;
+            font-weight: 600;
+            color: #001F3F;
+            margin-bottom: 16px;
+        }
+        .description {
+            font-size: 14px;
+            color: #5A7A9A;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .image-placeholder {
+            background: linear-gradient(135deg, #E6F0F8 0%, #C7E9FE 100%);
+            border: 2px dashed #001F3F;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            color: #5A7A9A;
+            font-size: 14px;
+        }
+        .impact {
+            border-top: 2px solid #5A7A9A;
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+        .impact-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #001F3F;
+            margin-bottom: 8px;
+        }
+        .impact-text {
+            font-size: 14px;
+            color: #5A7A9A;
+        }
+        
+        /* Layout Option 1: Image at top */
+        .layout1 .image-placeholder {
+            margin-bottom: 20px;
+            height: 200px;
+        }
+        
+        /* Layout Option 2: Image on right side (2 column) */
+        .layout2 {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 20px;
+        }
+        .layout2 .image-placeholder {
+            height: 300px;
+        }
+        
+        /* Layout Option 3: Image below description, above impact */
+        .layout3 .image-placeholder {
+            margin: 20px 0;
+            height: 200px;
+        }
+        
+        /* Layout Option 4: Image as background with overlay text */
+        .layout4 {
+            position: relative;
+            overflow: hidden;
+        }
+        .layout4 .image-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            opacity: 0.2;
+            z-index: 0;
+        }
+        .layout4 .content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        h2 {
+            color: #001F3F;
+            margin-top: 0;
+            font-size: 20px;
+            border-bottom: 2px solid #001F3F;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: #001F3F; margin-bottom: 40px;">Image Layout Options for Instagram Project Card</h1>
+    
+    <!-- Option 1: Image at Top -->
+    <div class="preview-card layout1">
+        <h2>Option 1: Image at Top</h2>
+        <div class="image-placeholder">📱 Instagram Logged-Out Mobile Web Screenshot</div>
+        <div class="company-year">META • 2022-2023</div>
+        <div class="title">15% Teen MAU Growth: Activating 90M Daily Logged-Out Instagram Visitors</div>
+        <div class="role">Lead Product Manager</div>
+        <div class="description">Led growth strategy for logged-out surfaces, creating ML-driven personalization that transformed visitor experience. Patent pending for innovation.</div>
+        <div class="impact">
+            <div class="impact-label">Impact</div>
+            <div class="impact-text">90M daily users • 12% lift in activation • Increased U.S. Teen MAU in H2 2022</div>
+        </div>
+    </div>
+    
+    <!-- Option 2: Image on Right (2 Column) -->
+    <div class="preview-card layout2">
+        <div>
+            <div class="company-year">META • 2022-2023</div>
+            <div class="title">15% Teen MAU Growth: Activating 90M Daily Logged-Out Instagram Visitors</div>
+            <div class="role">Lead Product Manager</div>
+            <div class="description">Led growth strategy for logged-out surfaces, creating ML-driven personalization that transformed visitor experience. Patent pending for innovation.</div>
+            <div class="impact">
+                <div class="impact-label">Impact</div>
+                <div class="impact-text">90M daily users • 12% lift in activation • Increased U.S. Teen MAU in H2 2022</div>
+            </div>
+        </div>
+        <div class="image-placeholder">📱<br>Screenshot</div>
+    </div>
+    
+    <!-- Option 3: Image Between Description and Impact -->
+    <div class="preview-card layout3">
+        <div class="company-year">META • 2022-2023</div>
+        <div class="title">15% Teen MAU Growth: Activating 90M Daily Logged-Out Instagram Visitors</div>
+        <div class="role">Lead Product Manager</div>
+        <div class="description">Led growth strategy for logged-out surfaces, creating ML-driven personalization that transformed visitor experience. Patent pending for innovation.</div>
+        <div class="image-placeholder">📱 Instagram Logged-Out Mobile Web Screenshot</div>
+        <div class="impact">
+            <div class="impact-label">Impact</div>
+            <div class="impact-text">90M daily users • 12% lift in activation • Increased U.S. Teen MAU in H2 2022</div>
+        </div>
+    </div>
+    
+    <!-- Option 4: Image as Subtle Background -->
+    <div class="preview-card layout4">
+        <div class="image-placeholder"></div>
+        <div class="content">
+            <div class="company-year">META • 2022-2023</div>
+            <div class="title">15% Teen MAU Growth: Activating 90M Daily Logged-Out Instagram Visitors</div>
+            <div class="role">Lead Product Manager</div>
+            <div class="description">Led growth strategy for logged-out surfaces, creating ML-driven personalization that transformed visitor experience. Patent pending for innovation.</div>
+            <div class="impact">
+                <div class="impact-label">Impact</div>
+                <div class="impact-text">90M daily users • 12% lift in activation • Increased U.S. Teen MAU in H2 2022</div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+

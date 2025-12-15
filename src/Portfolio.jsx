@@ -800,8 +800,657 @@ const Portfolio = () => {
     );
   };
 
+  const RestaurantOrderDemo = () => {
+    const [isRecording, setIsRecording] = React.useState(false);
+    const [recordingTime, setRecordingTime] = React.useState(0);
+    const [showSuccessToast, setShowSuccessToast] = React.useState(false);
+    const [currentOrder, setCurrentOrder] = React.useState([]);
+    const [transcript, setTranscript] = React.useState('');
+    const [recognition, setRecognition] = React.useState(null);
+    const [browserSupported, setBrowserSupported] = React.useState(true);
+    const [showThankYou, setShowThankYou] = React.useState(false);
+    const [submittedOrder, setSubmittedOrder] = React.useState(null);
+    const shouldListenRef = React.useRef(false);
+
+    const TABLE_NUMBER = 5;
+    const TAX_RATE = 0.08875; // 8.875% (example NYC sales tax)
+    const formatMoney = (amount) => `$${amount.toFixed(2)}`;
+
+    // Mock restaurant menus
+    const currentRestaurant = {
+      name: "The Classic Diner",
+      color: "#001F3F",
+      lightColor: "#F9FAFB",
+      menu: {
+        appetizers: [
+          { name: "Mozzarella Sticks", price: 9.5 },
+          { name: "Buffalo Wings", price: 12.0 },
+          { name: "Onion Rings", price: 7.0 },
+          { name: "French Fries", price: 6.5 }
+        ],
+        entrees: [
+          { name: "Bacon Cheeseburger", price: 14.5 },
+          { name: "Club Sandwich", price: 13.0 },
+          { name: "Philly Cheesesteak", price: 15.5 },
+          { name: "BBQ Ribs", price: 19.0 }
+        ],
+        drinks: [
+          { name: "Chocolate Milkshake", price: 6.75 },
+          { name: "Vanilla Milkshake", price: 6.75 },
+          { name: "Iced Tea", price: 3.5 },
+          { name: "Root Beer Float", price: 6.25 }
+        ]
+      }
+    };
+
+    const subtotal = currentOrder.reduce((sum, item) => sum + (item.price || 0) * item.qty, 0);
+    const tax = subtotal * TAX_RATE;
+    const total = subtotal + tax;
+
+    // Initialize Speech Recognition
+    React.useEffect(() => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        setBrowserSupported(false);
+        return;
+      }
+
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = true;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = 'en-US';
+
+      recognitionInstance.onresult = (event) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+            // Process final transcript for menu items
+            matchAndAddItems(transcript);
+          }
+        }
+        if (finalTranscript) {
+          setTranscript(prev => prev + finalTranscript);
+        }
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          alert('Microphone access denied. Please allow microphone access to use voice ordering.');
+          shouldListenRef.current = false;
+          setIsRecording(false);
+          return;
+        }
+        // Common non-fatal errors that happen during normal use (pauses, etc).
+        // If the user is still recording, attempt to recover automatically.
+        if (shouldListenRef.current && (event.error === 'no-speech' || event.error === 'aborted' || event.error === 'audio-capture' || event.error === 'network')) {
+          setTimeout(() => {
+            if (!shouldListenRef.current) return;
+            try {
+              recognitionInstance.start();
+            } catch (e) {
+              // If restart fails repeatedly, fall back to stopped UI
+              shouldListenRef.current = false;
+              setIsRecording(false);
+            }
+          }, 250);
+        }
+      };
+
+      recognitionInstance.onend = () => {
+        // Some browsers stop recognition automatically after pauses.
+        // If the user is still "recording", immediately restart.
+        if (shouldListenRef.current) {
+          setTimeout(() => {
+            if (!shouldListenRef.current) return;
+            try {
+              recognitionInstance.start();
+            } catch (e) {
+              // If restart fails, fall back to stopped UI
+              shouldListenRef.current = false;
+              setIsRecording(false);
+            }
+          }, 250);
+          return;
+        }
+        setIsRecording(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }, []);
+
+    // Timer effect for recording
+    React.useEffect(() => {
+      let timer;
+      if (isRecording) {
+        timer = setInterval(() => {
+          setRecordingTime(prev => prev + 1);
+        }, 1000);
+      }
+      return () => {
+        if (timer) clearInterval(timer);
+      };
+    }, [isRecording]);
+
+    const normalizeText = (value) =>
+      (value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const stemToken = (token) => token.replace(/s$/i, '');
+
+    const includesAllMeaningfulTokens = (text, phrase) => {
+      const t = normalizeText(text);
+      const tokens = normalizeText(phrase)
+        .split(' ')
+        .map(stemToken)
+        .filter(Boolean)
+        .filter((tok) => tok.length > 2);
+
+      if (tokens.length === 0) return false;
+      return tokens.every((tok) => t.includes(tok));
+    };
+
+    const getMenuAliases = (canonicalName) => {
+      const aliasesByItem = {
+        'Mozzarella Sticks': ['mozzarella stick', 'mozz sticks', 'mozz stick'],
+        'Buffalo Wings': ['wings', 'buffalo wing', 'buffalo wings'],
+        'Onion Rings': ['onion ring', 'onion rings'],
+        'French Fries': ['fries', 'french fry', 'french fries'],
+        'Bacon Cheeseburger': ['cheeseburger', 'bacon burger', 'burger'],
+        'Club Sandwich': ['club', 'club sandwich'],
+        'Philly Cheesesteak': ['cheesesteak', 'philly', 'philly cheesesteak', 'cheese steak'],
+        'BBQ Ribs': ['ribs', 'barbecue ribs', 'bbq rib', 'bbq ribs'],
+        'Chocolate Milkshake': ['chocolate shake', 'milkshake', 'milk shake', 'chocolate milk shake'],
+        'Vanilla Milkshake': ['vanilla shake', 'milkshake', 'milk shake', 'vanilla milk shake'],
+        'Iced Tea': ['ice tea', 'iced tea'],
+        'Root Beer Float': ['root beer', 'rootbeer float', 'root beer float']
+      };
+
+      const base = aliasesByItem[canonicalName] || [];
+      // Always include canonical and a simple singular form
+      const canonical = canonicalName;
+      const singular = canonicalName.replace(/\bSticks\b/i, 'Stick').replace(/\bWings\b/i, 'Wing').replace(/\bRings\b/i, 'Ring').replace(/\bFries\b/i, 'Fry');
+      return Array.from(new Set([canonical, singular, ...base]));
+    };
+
+    // Helper function to extract quantity from text
+    const extractQuantity = (text, matchedPhrase) => {
+      const numberWords = {
+        'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+        'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+      };
+      
+      const itemIndex = text.toLowerCase().indexOf((matchedPhrase || '').toLowerCase());
+      const beforeItem = text.substring(Math.max(0, itemIndex - 30), itemIndex).toLowerCase();
+      
+      // Check for written numbers
+      for (const [word, num] of Object.entries(numberWords)) {
+        if (beforeItem.includes(word)) return num;
+      }
+      
+      // Check for digits
+      const digitMatch = beforeItem.match(/(\d+)/);
+      if (digitMatch) return parseInt(digitMatch[1]);
+      
+      return 1;
+    };
+
+    // Helper function to extract modifications
+    const extractModifications = (text, matchedPhrase) => {
+      const itemIndex = text.toLowerCase().indexOf((matchedPhrase || '').toLowerCase());
+      const afterItem = text.substring(itemIndex, itemIndex + 100).toLowerCase();
+      
+      const modifications = [];
+      const modPatterns = [
+        'gluten-free', 'gluten free', 'no onions', 'no pickles', 'extra', 
+        'well done', 'medium', 'rare', 'on the rocks', 'salt rim', 'no salt'
+      ];
+      
+      for (const mod of modPatterns) {
+        if (afterItem.includes(mod)) {
+          modifications.push(mod);
+        }
+      }
+      
+      return modifications.length > 0 ? modifications.join(', ') : null;
+    };
+
+    // Match menu items from speech
+    const matchAndAddItems = (text) => {
+      const lowerText = normalizeText(text);
+      const matches = [];
+      
+      // Check all menu categories
+      const allItems = [
+        ...currentRestaurant.menu.appetizers.map(item => ({ ...item, category: 'Appetizer' })),
+        ...currentRestaurant.menu.entrees.map(item => ({ ...item, category: 'Entree' })),
+        ...currentRestaurant.menu.drinks.map(item => ({ ...item, category: 'Drink' }))
+      ];
+      
+      allItems.forEach(menuItem => {
+        const aliases = getMenuAliases(menuItem.name);
+        const matchedAlias = aliases.find((a) => lowerText.includes(normalizeText(a))) || (includesAllMeaningfulTokens(lowerText, menuItem.name) ? menuItem.name : null);
+        if (!matchedAlias) return;
+
+        // Check if we already added this item in this batch
+        const alreadyInBatch = matches.some(item => item.name === menuItem.name);
+        if (alreadyInBatch) return;
+
+        matches.push({
+          id: `${Date.now()}-${Math.random()}`,
+          name: menuItem.name,
+          category: menuItem.category,
+          price: menuItem.price,
+          qty: extractQuantity(text, matchedAlias),
+          modifications: extractModifications(text, matchedAlias)
+        });
+      });
+      
+      if (matches.length === 0) return;
+
+      // Merge into existing order: increment qty if item exists
+      setCurrentOrder(prev => {
+        const next = [...prev];
+        for (const incoming of matches) {
+          const existingIdx = next.findIndex(i => i.name === incoming.name);
+          if (existingIdx === -1) {
+            next.push(incoming);
+            continue;
+          }
+
+          const existing = next[existingIdx];
+          const mergedMods =
+            incoming.modifications && existing.modifications && incoming.modifications !== existing.modifications
+              ? `${existing.modifications}; ${incoming.modifications}`
+              : (existing.modifications || incoming.modifications || null);
+
+          next[existingIdx] = {
+            ...existing,
+            qty: existing.qty + (incoming.qty || 1),
+            modifications: mergedMods
+          };
+        }
+        return next;
+      });
+    };
+
+    const handleRecord = () => {
+      if (!recognition) {
+        alert('Speech recognition not available in this browser.');
+        return;
+      }
+
+      if (!isRecording) {
+        // Start recording
+        shouldListenRef.current = true;
+        setIsRecording(true);
+        setRecordingTime(0);
+        setTranscript('');
+        try {
+          recognition.start();
+        } catch (e) {
+          // If start fails (e.g., already active), keep UI consistent
+          setIsRecording(false);
+          shouldListenRef.current = false;
+        }
+      } else {
+        // Stop recording
+        shouldListenRef.current = false;
+        recognition.stop();
+        setIsRecording(false);
+      }
+    };
+
+    const resetDemo = () => {
+      if (isRecording && recognition) {
+        shouldListenRef.current = false;
+        recognition.stop();
+      }
+      setIsRecording(false);
+      setRecordingTime(0);
+      setCurrentOrder([]);
+      setTranscript('');
+      setShowSuccessToast(false);
+      setShowThankYou(false);
+      setSubmittedOrder(null);
+    };
+
+    const updateItemQuantity = (itemId, change) => {
+      setCurrentOrder(prev => prev.map(item => {
+        if (item.id === itemId) {
+          const newQty = Math.max(1, item.qty + change);
+          return { ...item, qty: newQty };
+        }
+        return item;
+      }));
+    };
+
+    const removeItem = (itemId) => {
+      setCurrentOrder(prev => prev.filter(item => item.id !== itemId));
+    };
+
+    const handleSendToKitchen = () => {
+      if (currentOrder.length === 0) return;
+      
+      setSubmittedOrder({
+        table: TABLE_NUMBER,
+        items: currentOrder,
+        subtotal,
+        tax,
+        total
+      });
+      setShowSuccessToast(true);
+      setTimeout(() => setShowThankYou(true), 900);
+      setTimeout(() => setShowSuccessToast(false), 2800);
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Success Toast */}
+        {showSuccessToast && (
+          <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 animate-fadeIn">
+            <div className="px-6 py-4 rounded-lg shadow-lg" style={{ backgroundColor: '#059669', color: 'white' }}>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">✓</span>
+                <div>
+                  <p className="font-bold">Order Sent to Kitchen!</p>
+                  <p className="text-sm opacity-90">Table {TABLE_NUMBER} - {currentOrder.length} items</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Browser Compatibility Warning */}
+        {!browserSupported && (
+          <div className="p-4 rounded border-2" style={{ backgroundColor: '#FEF3C7', borderColor: '#F59E0B', color: '#92400E' }}>
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <p className="font-bold mb-1">Voice Recognition Not Supported</p>
+                <p className="text-sm">Your browser doesn't support voice recognition. Please use Chrome, Edge, or Safari for the best experience.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Thank you screen */}
+        {showThankYou && submittedOrder ? (
+          <div className="p-10 rounded border-2 bg-white text-center" style={{ borderColor: '#E6F0F8' }}>
+            <div className="mx-auto mb-6 w-40 h-40 flex items-center justify-center rounded-full" style={{ backgroundColor: '#F9FAFB' }}>
+              <svg viewBox="0 0 128 128" width="120" height="120" role="img" aria-label="Thank you">
+                <path d="M64 18c-25.4 0-46 18.8-46 42s20.6 42 46 42 46-18.8 46-42S89.4 18 64 18Zm0 72c-19.5 0-35.3-13.4-35.3-30S44.5 30 64 30s35.3 13.4 35.3 30S83.5 90 64 90Z" fill="#001F3F"/>
+                <path d="M56.7 66.7 47.6 57.6a4 4 0 1 0-5.7 5.7l12 12a4 4 0 0 0 5.7 0l26-26a4 4 0 1 0-5.7-5.7l-23.2 23.1Z" fill="#059669"/>
+              </svg>
+            </div>
+            <h4 className="text-3xl font-bold mb-2" style={{ color: '#001F3F' }}>Thank you for your order!</h4>
+            <p className="text-base mb-6" style={{ color: '#5A7A9A' }}>
+              Table {submittedOrder.table} • Total {formatMoney(submittedOrder.total)}
+            </p>
+            <button
+              onClick={resetDemo}
+              className="px-6 py-3 rounded font-medium border-2 transition-colors"
+              style={{ borderColor: '#001F3F', color: '#001F3F', backgroundColor: 'white' }}
+              onMouseEnter={(e) => { e.target.style.backgroundColor = '#001F3F'; e.target.style.color = 'white'; }}
+              onMouseLeave={(e) => { e.target.style.backgroundColor = 'white'; e.target.style.color = '#001F3F'; }}
+            >
+              Start a new order
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Primary CTA (replaces menu selection) */}
+            <div className="p-6 rounded border-2" style={{ borderColor: '#E6F0F8', backgroundColor: '#F9FAFB' }}>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex-1">
+                  <p className="text-2xl md:text-3xl font-bold leading-tight" style={{ color: '#001F3F' }}>
+                    Try it now by clicking the microphone and ordering off the menu.
+                  </p>
+                  <p className="text-sm mt-2" style={{ color: '#5A7A9A' }}>
+                    Speak naturally (e.g., “two mozzarella sticks and a bacon cheeseburger, medium, no pickles”). Items will populate in real-time below.
+                  </p>
+                </div>
+
+                {(isRecording || currentOrder.length === 0) && (
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={handleRecord}
+                      disabled={!browserSupported}
+                      className="w-24 h-24 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                      style={{
+                        backgroundColor: isRecording ? '#DC2626' : currentRestaurant.color,
+                        animation: isRecording ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none'
+                      }}
+                    >
+                      <span className="text-white text-4xl">{isRecording ? '⏹' : '🎤'}</span>
+                    </button>
+                    <p className="mt-3 text-sm font-medium" style={{ color: '#001F3F' }}>
+                      {isRecording ? `Recording… ${recordingTime}s (click to stop)` : 'Click to start recording'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+        {/* Restaurant Menu Display */}
+        <div className="p-6 rounded border-2" style={{ borderColor: '#E6F0F8', backgroundColor: 'white' }}>
+          <h4 className="text-lg font-bold mb-4" style={{ color: '#001F3F' }}>📋 {currentRestaurant.name} Menu</h4>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div>
+              <p className="font-semibold mb-2 text-sm" style={{ color: '#5A7A9A' }}>APPETIZERS</p>
+              <ul className="space-y-1">
+                {currentRestaurant.menu.appetizers.map((item, idx) => (
+                  <li key={idx} className="text-sm flex justify-between gap-3" style={{ color: '#001F3F' }}>
+                    <span>• {item.name}</span>
+                    <span className="tabular-nums" style={{ color: '#5A7A9A' }}>{formatMoney(item.price)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold mb-2 text-sm" style={{ color: '#5A7A9A' }}>ENTREES</p>
+              <ul className="space-y-1">
+                {currentRestaurant.menu.entrees.map((item, idx) => (
+                  <li key={idx} className="text-sm flex justify-between gap-3" style={{ color: '#001F3F' }}>
+                    <span>• {item.name}</span>
+                    <span className="tabular-nums" style={{ color: '#5A7A9A' }}>{formatMoney(item.price)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold mb-2 text-sm" style={{ color: '#5A7A9A' }}>DRINKS</p>
+              <ul className="space-y-1">
+                {currentRestaurant.menu.drinks.map((item, idx) => (
+                  <li key={idx} className="text-sm flex justify-between gap-3" style={{ color: '#001F3F' }}>
+                    <span>• {item.name}</span>
+                    <span className="tabular-nums" style={{ color: '#5A7A9A' }}>{formatMoney(item.price)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Current Order Display - Always Visible */}
+        <div className="p-6 rounded border-2 bg-white" style={{ borderColor: '#001F3F' }}>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h5 className="text-xl font-bold mb-1" style={{ color: '#001F3F' }}>
+                Current Order {isRecording && <span className="text-sm font-normal animate-pulse" style={{ color: '#059669' }}>🎤 Listening...</span>}
+              </h5>
+              <p className="text-sm" style={{ color: '#5A7A9A' }}>
+                {currentRestaurant.name} • Table {TABLE_NUMBER}
+              </p>
+            </div>
+            {!isRecording && currentOrder.length > 0 && (
+              <span className="px-3 py-1 rounded text-xs font-bold" style={{ backgroundColor: '#E6F0F8', color: '#001F3F' }}>
+                ✓ Ready to send
+              </span>
+            )}
+          </div>
+
+          {/* Live Transcript Display */}
+          {isRecording && transcript && (
+            <div className="mb-4 p-3 rounded" style={{ backgroundColor: '#F9FAFB', borderLeft: '3px solid #059669' }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: '#5A7A9A' }}>RECOGNIZED SPEECH:</p>
+              <p className="text-sm italic" style={{ color: '#001F3F' }}>"{transcript}"</p>
+            </div>
+          )}
+
+          {/* Zero State - No items yet */}
+          {currentOrder.length === 0 && (
+            <div className="py-8 text-center" style={{ color: '#5A7A9A' }}>
+              <div className="text-4xl mb-3">📝</div>
+              <p className="font-medium mb-1" style={{ color: '#001F3F' }}>No items yet</p>
+              <p className="text-sm">
+                {isRecording 
+                  ? 'Speak menu items from above and they\'ll appear here...' 
+                  : 'Start recording to add items from the menu above'
+                }
+              </p>
+            </div>
+          )}
+
+          {/* Order Items */}
+          {currentOrder.length > 0 && (
+            <>
+            <div className="space-y-3 mb-6">
+              {currentOrder.map((item, idx) => (
+                <div key={item.id} className="flex items-start gap-3 p-3 rounded animate-fadeIn" style={{ backgroundColor: '#F9FAFB' }}>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-lg" style={{ color: '#001F3F' }}>
+                        {item.qty}×
+                      </span>
+                      <span className="font-semibold" style={{ color: '#001F3F' }}>{item.name}</span>
+                      <span className="text-xs px-2 py-1 rounded ml-auto" style={{ 
+                        backgroundColor: '#E6F0F8',
+                        color: '#5A7A9A'
+                      }}>
+                        {item.category}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm" style={{ color: '#5A7A9A' }}>
+                      <span className="tabular-nums">{formatMoney(item.price)} each</span>
+                      <span className="tabular-nums font-semibold" style={{ color: '#001F3F' }}>
+                        {formatMoney(item.price * item.qty)}
+                      </span>
+                    </div>
+                    {item.modifications && (
+                      <p className="text-sm italic" style={{ color: '#DC2626' }}>
+                        Special request: {item.modifications}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Edit Controls - Only show when not recording */}
+                  {!isRecording && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateItemQuantity(item.id, -1)}
+                        className="w-8 h-8 rounded flex items-center justify-center font-bold transition-colors"
+                        style={{ backgroundColor: '#E6F0F8', color: '#001F3F' }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#001F3F'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#E6F0F8'}
+                      >
+                        −
+                      </button>
+                      <button
+                        onClick={() => updateItemQuantity(item.id, 1)}
+                        className="w-8 h-8 rounded flex items-center justify-center font-bold transition-colors"
+                        style={{ backgroundColor: '#E6F0F8', color: '#001F3F' }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#001F3F'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#E6F0F8'}
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="w-8 h-8 rounded flex items-center justify-center transition-colors"
+                        style={{ backgroundColor: '#FEE2E2', color: '#DC2626' }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#DC2626'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#FEE2E2'}
+                        title="Remove item"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Totals */}
+            <div className="mb-6 p-4 rounded border" style={{ borderColor: '#E6F0F8', backgroundColor: 'white' }}>
+              <div className="flex justify-between text-sm mb-2" style={{ color: '#5A7A9A' }}>
+                <span>Subtotal</span>
+                <span className="tabular-nums">{formatMoney(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm mb-2" style={{ color: '#5A7A9A' }}>
+                <span>Tax</span>
+                <span className="tabular-nums">{formatMoney(tax)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold" style={{ color: '#001F3F' }}>
+                <span>Total</span>
+                <span className="tabular-nums">{formatMoney(total)}</span>
+              </div>
+            </div>
+
+            {/* Action Buttons - Only show when not recording */}
+            {!isRecording && (
+              <div className="flex gap-3">
+                <button
+                  onClick={resetDemo}
+                  className="flex-1 px-6 py-3 rounded font-medium border-2 transition-colors"
+                  style={{ 
+                    borderColor: '#001F3F',
+                    color: '#001F3F',
+                    backgroundColor: 'white'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#001F3F';
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'white';
+                    e.target.style.color = '#001F3F';
+                  }}
+                >
+                  ← New Order
+                </button>
+                <button
+                  onClick={handleSendToKitchen}
+                  disabled={currentOrder.length === 0}
+                  className="flex-1 px-6 py-3 rounded font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#001F3F' }}
+                  onMouseEnter={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#003366')}
+                  onMouseLeave={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#001F3F')}
+                >
+                  Submit to Kitchen →
+                </button>
+              </div>
+            )}
+            </>
+          )}
+        </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
   const AIProjects = () => {
     const isActive = activeSection === 'ai-projects';
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isTaskWhisperSectionExpanded, setIsTaskWhisperSectionExpanded] = useState(false);
+    const [isTaskWhisperDeepDiveExpanded, setIsTaskWhisperDeepDiveExpanded] = useState(false);
     return (
       <section 
         data-section="ai-projects"
@@ -816,154 +1465,307 @@ const Portfolio = () => {
             </p>
           </div>
 
-        <div className="mb-16 border-4 p-8 md:p-12" style={{ borderColor: '#001F3F' }}>
-          <div className="grid md:grid-cols-2 gap-12 w-full">
-            <div className="space-y-6">
-              <div>
-                <div className="text-sm uppercase tracking-wider mb-2" style={{ color: '#5A7A9A' }}>Featured Project • 2024</div>
-                <h3 className="text-4xl font-bold mb-4" style={{ color: '#001F3F' }}>TaskWhisper</h3>
-                <p className="text-xl leading-relaxed" style={{ color: '#5A7A9A' }}>
-                  An AI-native web app that transforms rambling voice notes into organized, actionable tasks with priorities and sub-tasks.
-                </p>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t-2" style={{ borderColor: '#E6F0F8' }}>
-                <div>
-                  <h4 className="font-bold text-lg mb-2" style={{ color: '#001F3F' }}>The Problem</h4>
-                  <p style={{ color: '#5A7A9A' }}>
-                    Most people have their best ideas on the move—walking the dog, driving, working out. Recording a voice note is easy, but extracting actionable tasks from rambling audio is tedious.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-bold text-lg mb-2" style={{ color: '#001F3F' }}>The Solution</h4>
-                  <p style={{ color: '#5A7A9A' }}>
-                    TaskWhisper doesn't just transcribe—it understands intent. It processes raw audio, categorizes into tasks, assigns priorities, suggests sub-tasks, and emails results so you don't forget.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-bold text-lg mb-2" style={{ color: '#001F3F' }}>Target User</h4>
-                  <p style={{ color: '#5A7A9A' }}>
-                    Working professionals with active lifestyles who are constantly on the move and need a frictionless way to capture and organize their ideas.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-4 pt-6">
-                <a 
-                  href="https://taskwhisper.jaypwadhwani.com/" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="px-6 py-3 text-white transition-colors duration-200"
-                  style={{ backgroundColor: '#001F3F' }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#003366'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#001F3F'}
-                >
-                  Try TaskWhisper →
-                </a>
-                <button 
-                  onClick={() => document.getElementById('taskwhisper-detail')?.scrollIntoView({ behavior: 'smooth' })} 
-                  className="px-6 py-3 border-2 transition-all duration-200 ease-in-out"
-                  style={{ 
-                    borderColor: '#001F3F',
-                    color: '#001F3F',
-                    backgroundColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#001F3F';
-                    e.target.style.color = '#FFFFFF';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = '#001F3F';
-                  }}
-                >
-                  Technical Deep Dive
-                </button>
-              </div>
-            </div>
-
-            <div className="p-8 flex items-center justify-center" style={{ backgroundColor: '#E6F0F8' }}>
-              <div className="text-center space-y-4">
-                <div className="text-6xl">🎙️</div>
-                <div className="text-sm uppercase tracking-wider" style={{ color: '#5A7A9A' }}>Voice → AI Processing → Organized Tasks</div>
-              </div>
-            </div>
+          <div className="pt-10 border-t-2 mb-8" style={{ borderColor: '#E6F0F8' }}>
+            <h3 className="text-3xl font-bold mb-3" style={{ color: '#001F3F' }}>TaskWhisper</h3>
+            <p className="text-lg" style={{ color: '#5A7A9A' }}>
+              A voice-first productivity tool that turns messy, stream-of-consciousness notes into clear, prioritized tasks. Expand below to see the product summary and a technical deep dive.
+            </p>
           </div>
-        </div>
 
-        <div id="taskwhisper-detail" className="space-y-12">
-          <div className="border-l-4 pl-8" style={{ borderColor: '#001F3F' }}>
-            <h3 className="text-3xl font-bold mb-6" style={{ color: '#001F3F' }}>How TaskWhisper Works</h3>
-            
-            <div className="space-y-8">
-              <div>
-                <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>1. Voice Capture</h4>
-                <p className="leading-relaxed" style={{ color: '#5A7A9A' }}>
-                  Users record their thoughts directly in the browser. The audio is captured and prepared for processing—no app download required.
-                </p>
+          {/* TaskWhisper (collapsible, like Restaurant Order Taking) */}
+          <button
+            onClick={() => {
+              setIsTaskWhisperSectionExpanded((prev) => {
+                const next = !prev;
+                if (!next) setIsTaskWhisperDeepDiveExpanded(false);
+                return next;
+              });
+            }}
+            className="w-full md:w-auto px-8 py-4 text-lg font-medium transition-all duration-200 mb-8"
+            style={{ 
+              backgroundColor: isTaskWhisperSectionExpanded ? '#003366' : '#001F3F',
+              color: '#FFFFFF'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#003366'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = isTaskWhisperSectionExpanded ? '#003366' : '#001F3F'}
+          >
+            {isTaskWhisperSectionExpanded ? '▼' : '▶'} TaskWhisper
+          </button>
+
+          {isTaskWhisperSectionExpanded && (
+            <div className="animate-fadeIn">
+              <div className="mb-16 border-4 p-8 md:p-12" style={{ borderColor: '#001F3F' }}>
+                <div className="grid md:grid-cols-2 gap-12 w-full">
+                  <div className="space-y-6">
+                    <div>
+                      <div className="text-sm uppercase tracking-wider mb-2" style={{ color: '#5A7A9A' }}>Featured Project • 2024</div>
+                      <h3 className="text-4xl font-bold mb-4" style={{ color: '#001F3F' }}>TaskWhisper</h3>
+                      <p className="text-xl leading-relaxed" style={{ color: '#5A7A9A' }}>
+                        An AI-native web app that transforms rambling voice notes into organized, actionable tasks with priorities and sub-tasks.
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t-2" style={{ borderColor: '#E6F0F8' }}>
+                      <div>
+                        <h4 className="font-bold text-lg mb-2" style={{ color: '#001F3F' }}>The Problem</h4>
+                        <p style={{ color: '#5A7A9A' }}>
+                          Most people have their best ideas on the move—walking the dog, driving, working out. Recording a voice note is easy, but extracting actionable tasks from rambling audio is tedious.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-bold text-lg mb-2" style={{ color: '#001F3F' }}>The Solution</h4>
+                        <p style={{ color: '#5A7A9A' }}>
+                          TaskWhisper doesn't just transcribe—it understands intent. It processes raw audio, categorizes into tasks, assigns priorities, suggests sub-tasks, and emails results so you don't forget.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-bold text-lg mb-2" style={{ color: '#001F3F' }}>Target User</h4>
+                        <p style={{ color: '#5A7A9A' }}>
+                          Working professionals with active lifestyles who are constantly on the move and need a frictionless way to capture and organize their ideas.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 pt-6">
+                      <a 
+                        href="https://taskwhisper.jaypwadhwani.com/" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="px-6 py-3 text-white transition-colors duration-200"
+                        style={{ backgroundColor: '#001F3F' }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#003366'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#001F3F'}
+                      >
+                        Try TaskWhisper →
+                      </a>
+                      <button 
+                        onClick={() => {
+                          setIsTaskWhisperDeepDiveExpanded((prev) => {
+                            const next = !prev;
+                            if (next) {
+                              setTimeout(() => {
+                                document.getElementById('taskwhisper-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 50);
+                            }
+                            return next;
+                          });
+                        }}
+                        className="px-6 py-3 border-2 transition-all duration-200 ease-in-out"
+                        style={{ 
+                          borderColor: '#001F3F',
+                          color: '#001F3F',
+                          backgroundColor: 'transparent'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#001F3F';
+                          e.target.style.color = '#FFFFFF';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = '#001F3F';
+                        }}
+                      >
+                        {isTaskWhisperDeepDiveExpanded ? '▼' : '▶'} Technical Deep Dive
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-8 flex items-center justify-center" style={{ backgroundColor: '#E6F0F8' }}>
+                    <div className="text-center space-y-4">
+                      <div className="text-6xl">🎙️</div>
+                      <div className="text-sm uppercase tracking-wider" style={{ color: '#5A7A9A' }}>Voice → AI Processing → Organized Tasks</div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>2. AI Processing with Claude</h4>
-                <p className="leading-relaxed mb-3" style={{ color: '#5A7A9A' }}>
-                  The audio is sent to Claude (Anthropic's AI), which I used extensively throughout this project. Claude transcribes the audio and goes beyond simple transcription:
-                </p>
-                <ul className="space-y-2 ml-6">
-                  <li style={{ color: '#5A7A9A' }}>• Identifies individual tasks from rambling speech</li>
-                  <li style={{ color: '#5A7A9A' }}>• Categorizes tasks by type (work, personal, urgent)</li>
-                  <li style={{ color: '#5A7A9A' }}>• Assigns priority levels based on context and urgency signals</li>
-                  <li style={{ color: '#5A7A9A' }}>• Suggests logical sub-tasks to break down complex items</li>
-                </ul>
-              </div>
+              <div className="space-y-12">
+                {/* Anchor for deep dive */}
+                <div id="taskwhisper-detail" />
 
-              <div>
-                <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>3. Data Storage & Management</h4>
-                <p className="leading-relaxed" style={{ color: '#5A7A9A' }}>
-                  Processed tasks are stored in <strong>Supabase</strong>, providing a reliable PostgreSQL database with real-time capabilities. This allows users to access their task history and ensures nothing gets lost.
-                </p>
-              </div>
+                {/* TaskWhisper Deep Dive (collapsible) */}
+                {isTaskWhisperDeepDiveExpanded && (
+                  <div className="border-l-4 pl-8 animate-fadeIn" style={{ borderColor: '#001F3F' }}>
+                    <h3 className="text-3xl font-bold mb-6" style={{ color: '#001F3F' }}>How TaskWhisper Works</h3>
+                    
+                    <div className="space-y-8">
+                <div>
+                  <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>1. Voice Capture</h4>
+                  <p className="leading-relaxed" style={{ color: '#5A7A9A' }}>
+                    Users record their thoughts directly in the browser. The audio is captured and prepared for processing—no app download required.
+                  </p>
+                </div>
 
-              <div>
-                <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>4. Delivery via Resend API</h4>
-                <p className="leading-relaxed" style={{ color: '#5A7A9A' }}>
-                  Once tasks are organized, they're delivered to the user via email or SMS using the <strong>Resend API</strong>. This ensures users get their actionable task list exactly where they need it.
-                </p>
-              </div>
+                <div>
+                  <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>2. AI Processing with Claude</h4>
+                  <p className="leading-relaxed mb-3" style={{ color: '#5A7A9A' }}>
+                    The audio is sent to Claude (Anthropic's AI), which I used extensively throughout this project. Claude transcribes the audio and goes beyond simple transcription:
+                  </p>
+                  <ul className="space-y-2 ml-6">
+                    <li style={{ color: '#5A7A9A' }}>• Identifies individual tasks from rambling speech</li>
+                    <li style={{ color: '#5A7A9A' }}>• Categorizes tasks by type (work, personal, urgent)</li>
+                    <li style={{ color: '#5A7A9A' }}>• Assigns priority levels based on context and urgency signals</li>
+                    <li style={{ color: '#5A7A9A' }}>• Suggests logical sub-tasks to break down complex items</li>
+                  </ul>
+                </div>
 
-              <div>
-                <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>5. Backend Infrastructure</h4>
-                <p className="leading-relaxed mb-3" style={{ color: '#5A7A9A' }}>
-                  The entire backend runs on <strong>Railway</strong>, providing seamless deployment and scaling. The infrastructure handles:
-                </p>
-                <ul className="space-y-2 ml-6">
-                  <li style={{ color: '#5A7A9A' }}>• Audio processing and API orchestration</li>
-                  <li style={{ color: '#5A7A9A' }}>• Secure authentication and user management</li>
-                  <li style={{ color: '#5A7A9A' }}>• Webhook management for real-time notifications</li>
-                </ul>
-              </div>
+                <div>
+                  <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>3. Data Storage & Management</h4>
+                  <p className="leading-relaxed" style={{ color: '#5A7A9A' }}>
+                    Processed tasks are stored in <strong>Supabase</strong>, providing a reliable PostgreSQL database with real-time capabilities. This allows users to access their task history and ensures nothing gets lost.
+                  </p>
+                </div>
 
-              <div>
-                <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>Development with Cursor</h4>
-                <p className="leading-relaxed" style={{ color: '#5A7A9A' }}>
-                  I built TaskWhisper using <strong>Cursor</strong> as my code editor, which provided AI-assisted development capabilities that dramatically accelerated the build process.
-                </p>
-              </div>
+                <div>
+                  <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>4. Delivery via Resend API</h4>
+                  <p className="leading-relaxed" style={{ color: '#5A7A9A' }}>
+                    Once tasks are organized, they're delivered to the user via email or SMS using the <strong>Resend API</strong>. This ensures users get their actionable task list exactly where they need it.
+                  </p>
+                </div>
 
-              <div className="p-6 border-l-4" style={{ backgroundColor: '#E6F0F8', borderColor: '#0074D9' }}>
-                <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>Why This Matters</h4>
-                <p className="leading-relaxed mb-3" style={{ color: '#5A7A9A' }}>
-                  I built TaskWhisper entirely from scratch—no engineering or design team. This project demonstrates my ability to:
-                </p>
-                <ul className="space-y-2 ml-6">
-                  <li style={{ color: '#5A7A9A' }}>→ <strong>Ship end-to-end:</strong> From product concept to working prototype</li>
-                  <li style={{ color: '#5A7A9A' }}>→ <strong>Leverage AI thoughtfully:</strong> Using Claude for intelligent task extraction</li>
-                  <li style={{ color: '#5A7A9A' }}>→ <strong>Integrate modern tools:</strong> Combining Railway, Supabase, Resend, and Cursor</li>
-                  <li style={{ color: '#5A7A9A' }}>→ <strong>Think product-first:</strong> Solving real problems with minimal friction</li>
-                </ul>
+                <div>
+                  <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>5. Backend Infrastructure</h4>
+                  <p className="leading-relaxed mb-3" style={{ color: '#5A7A9A' }}>
+                    The entire backend runs on <strong>Railway</strong>, providing seamless deployment and scaling. The infrastructure handles:
+                  </p>
+                  <ul className="space-y-2 ml-6">
+                    <li style={{ color: '#5A7A9A' }}>• Audio processing and API orchestration</li>
+                    <li style={{ color: '#5A7A9A' }}>• Secure authentication and user management</li>
+                    <li style={{ color: '#5A7A9A' }}>• Webhook management for real-time notifications</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>Development with Cursor</h4>
+                  <p className="leading-relaxed" style={{ color: '#5A7A9A' }}>
+                    I built TaskWhisper using <strong>Cursor</strong> as my code editor, which provided AI-assisted development capabilities that dramatically accelerated the build process.
+                  </p>
+                </div>
+
+                <div className="p-6 border-l-4" style={{ backgroundColor: '#E6F0F8', borderColor: '#0074D9' }}>
+                  <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>Why This Matters</h4>
+                  <p className="leading-relaxed mb-3" style={{ color: '#5A7A9A' }}>
+                    I built TaskWhisper entirely from scratch—no engineering or design team. This project demonstrates my ability to:
+                  </p>
+                  <ul className="space-y-2 ml-6">
+                    <li style={{ color: '#5A7A9A' }}>→ <strong>Ship end-to-end:</strong> From product concept to working prototype</li>
+                    <li style={{ color: '#5A7A9A' }}>→ <strong>Leverage AI thoughtfully:</strong> Using Claude for intelligent task extraction</li>
+                    <li style={{ color: '#5A7A9A' }}>→ <strong>Integrate modern tools:</strong> Combining Railway, Supabase, Resend, and Cursor</li>
+                    <li style={{ color: '#5A7A9A' }}>→ <strong>Think product-first:</strong> Solving real problems with minimal friction</li>
+                  </ul>
+                </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+          )}
+
+          <div className="pt-16 border-t-2" style={{ borderColor: '#E6F0F8' }}>
+            <h3 className="text-3xl font-bold mb-6" style={{ color: '#001F3F' }}>Creative Adaptation of TaskWhisper Functionality</h3>
+            <p className="text-lg mb-8" style={{ color: '#5A7A9A' }}>
+              The same technology behind TaskWhisper can solve completely different problems across industries. Explore how this voice-to-structured-data AI could transform restaurant operations.
+            </p>
+
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full md:w-auto px-8 py-4 text-lg font-medium transition-all duration-200 mb-8"
+              style={{ 
+                backgroundColor: isExpanded ? '#003366' : '#001F3F',
+                color: '#FFFFFF'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#003366'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = isExpanded ? '#003366' : '#001F3F'}
+            >
+              {isExpanded ? '▼' : '▶'} Restaurant Order Taking
+            </button>
+
+            {isExpanded && (
+              <div className="space-y-12 animate-fadeIn">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="p-6 border-l-4" style={{ borderColor: '#001F3F', backgroundColor: '#F9FAFB' }}>
+                    <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>The Problem</h4>
+                    <p style={{ color: '#5A7A9A' }}>
+                      Restaurant servers juggle multiple tables, memorizing orders or frantically scribbling notes. During peak hours, miscommunication leads to wrong orders, unhappy customers, and lost revenue. The friction of manual order-taking slows down service and increases error rates.
+                    </p>
+                  </div>
+
+                  <div className="p-6 border-l-4" style={{ borderColor: '#001F3F', backgroundColor: '#F9FAFB' }}>
+                    <h4 className="text-xl font-bold mb-3" style={{ color: '#001F3F' }}>The Solution</h4>
+                    <p style={{ color: '#5A7A9A' }}>
+                      Adapt TaskWhisper's voice-to-structured-data pipeline for restaurant ordering. Servers record customer orders on their phone, AI matches items to the restaurant's menu in real-time, detects modifications, and sends structured data directly to the kitchen display system.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-8 border-2" style={{ backgroundColor: '#FFFFFF', borderColor: '#001F3F' }}>
+                  <h4 className="text-xl font-bold mb-6" style={{ color: '#001F3F' }}>Interactive Demo (Simulated)</h4>
+                  <RestaurantOrderDemo />
+                </div>
+
+                <div>
+                  <h4 className="text-2xl font-bold mb-6" style={{ color: '#001F3F' }}>Same Technology, Different Context</h4>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    <div className="p-6 border-l-4" style={{ backgroundColor: '#F9FAFB', borderColor: '#5A7A9A' }}>
+                      <h5 className="font-bold mb-3" style={{ color: '#001F3F' }}>TaskWhisper</h5>
+                      <ul className="space-y-2" style={{ color: '#5A7A9A' }}>
+                        <li>• Voice memo → Tasks</li>
+                        <li>• Scheduled email delivery</li>
+                        <li>• Personal productivity focus</li>
+                        <li>• Async processing OK</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-6 border-l-4" style={{ backgroundColor: '#F9FAFB', borderColor: '#5A7A9A' }}>
+                      <h5 className="font-bold mb-3" style={{ color: '#001F3F' }}>Restaurant Orders</h5>
+                      <ul className="space-y-2" style={{ color: '#5A7A9A' }}>
+                        <li>• Customer speech → Menu items</li>
+                        <li>• Real-time kitchen system</li>
+                        <li>• Multi-table coordination</li>
+                        <li>• Instant processing required</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border-2" style={{ backgroundColor: '#F9FAFB', borderColor: '#E6F0F8' }}>
+                    <h5 className="font-bold mb-4" style={{ color: '#001F3F' }}>Technical Adaptations</h5>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <p className="font-semibold mb-3" style={{ color: '#001F3F' }}>Shared Components:</p>
+                        <ul className="text-sm space-y-2" style={{ color: '#5A7A9A' }}>
+                          <li>→ OpenAI Whisper for transcription</li>
+                          <li>→ Claude for intelligent parsing</li>
+                          <li>→ Real-time audio processing</li>
+                          <li>→ Mobile-first UI design</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-3" style={{ color: '#001F3F' }}>Key Differences:</p>
+                        <ul className="text-sm space-y-2" style={{ color: '#5A7A9A' }}>
+                          <li>→ Menu matching vs. task extraction</li>
+                          <li>→ Kitchen system integration vs. email</li>
+                          <li>→ Multi-language staff support</li>
+                          <li>→ Modification detection ("no onions")</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 border-l-4" style={{ backgroundColor: '#E6F0F8', borderColor: '#001F3F' }}>
+                  <h4 className="text-xl font-bold mb-4" style={{ color: '#001F3F' }}>Why This Matters</h4>
+                  <ul className="space-y-3" style={{ color: '#001F3F' }}>
+                    <li><strong>Creative Product Thinking:</strong> <span style={{ color: '#5A7A9A' }}>Identifying adjacent markets for the same core technology</span></li>
+                    <li><strong>User Empathy:</strong> <span style={{ color: '#5A7A9A' }}>Understanding pain points across different user contexts (productivity vs. service industry)</span></li>
+                    <li><strong>Technical Flexibility:</strong> <span style={{ color: '#5A7A9A' }}>Adapting AI pipelines for different output formats and integration points</span></li>
+                    <li><strong>Market Opportunity:</strong> <span style={{ color: '#5A7A9A' }}>Recognizing how one innovation can unlock multiple revenue streams</span></li>
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="pt-12 border-t-2" style={{ borderColor: '#E6F0F8' }}>
@@ -973,7 +1775,6 @@ const Portfolio = () => {
             </p>
           </div>
         </div>
-      </div>
       <div className="pt-16 -mx-4 sm:-mx-6">
         <SimpleFooter />
       </div>
@@ -1039,6 +1840,74 @@ const Portfolio = () => {
                 <p><strong style={{ color: '#001F3F' }}>Tools:</strong> SQL, Figma, Aha, Jira, AWS, Gen AI (Claude, GPT)</p>
                 <p><strong style={{ color: '#001F3F' }}>Development:</strong> Built with Cursor, Railway, Supabase, React</p>
                 <p><strong style={{ color: '#001F3F' }}>Platforms:</strong> Mobile & Web (iOS, Android, Web)</p>
+              </div>
+            </div>
+
+            <div className="pt-8 border-t-2" style={{ borderColor: '#E6F0F8' }}>
+              <h3 className="text-2xl font-bold mb-2" style={{ color: '#001F3F' }}>Brands I've Represented</h3>
+              <p className="text-base mb-5" style={{ color: '#5A7A9A' }}>
+                Experience building and scaling products across consumer, enterprise, and retail.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 items-center">
+                {[
+                  { name: 'Instagram', src: '/brands/instagram.webp', fallbackSrc: '/brands/instagram.svg', href: 'https://www.instagram.com/' },
+                  { name: 'LinkedIn', src: '/brands/linkedin.png', fallbackSrc: '/brands/linkedin.svg', href: 'https://www.linkedin.com/' },
+                  { name: 'Pandora', src: '/brands/pandora.png', fallbackSrc: '/brands/pandora.svg', href: 'https://www.pandora.com/' },
+                  { name: "Macy's", src: '/brands/macys.png', fallbackSrc: '/brands/macys.svg', href: 'https://www.macys.com/' },
+                  { name: 'IBM', src: '/brands/ibm.png', fallbackSrc: '/brands/ibm.svg', href: 'https://www.ibm.com/' },
+                ].map((brand) => (
+                  <div key={brand.name}>
+                    {brand.href ? (
+                      <a
+                        href={brand.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Visit ${brand.name}`}
+                        className="block p-4 rounded border bg-white transition-colors"
+                        style={{ borderColor: '#E6F0F8' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F9FAFB')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
+                      >
+                        <div className="flex items-center justify-center">
+                          <img
+                            src={brand.src}
+                            alt={`${brand.name} logo`}
+                            className="h-8 w-auto"
+                            style={{ filter: 'none', opacity: 0.95 }}
+                            loading="lazy"
+                            onError={(e) => {
+                              if (!brand.fallbackSrc) return;
+                              const img = e.currentTarget;
+                              // Prevent infinite loops if fallback is also missing
+                              if (img.src.includes(brand.fallbackSrc)) return;
+                              img.src = brand.fallbackSrc;
+                            }}
+                          />
+                        </div>
+                      </a>
+                    ) : (
+                      <div
+                        className="p-4 rounded border flex items-center justify-center bg-white"
+                        style={{ borderColor: '#E6F0F8' }}
+                      >
+                        <img
+                          src={brand.src}
+                          alt={`${brand.name} logo`}
+                          className="h-8 w-auto"
+                          style={{ filter: 'none', opacity: 0.95 }}
+                          loading="lazy"
+                          onError={(e) => {
+                            if (!brand.fallbackSrc) return;
+                            const img = e.currentTarget;
+                            // Prevent infinite loops if fallback is also missing
+                            if (img.src.includes(brand.fallbackSrc)) return;
+                            img.src = brand.fallbackSrc;
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 

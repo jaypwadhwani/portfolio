@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80" viewBox="0 0 240 80" role="img" aria-label="IBM">
+  <title>IBM</title>
+  <rect x="10" y="18" width="220" height="44" rx="10" fill="none" stroke="#001F3F" stroke-width="3"/>
+  <g fill="#001F3F">
+    <rect x="28" y="28" width="10" height="24" rx="1"/>
+    <rect x="24" y="28" width="22" height="4" rx="1"/>
+    <rect x="24" y="38" width="22" height="4" rx="1"/>
+    <rect x="24" y="48" width="22" height="4" rx="1"/>
+
+    <rect x="96" y="28" width="10" height="24" rx="1"/>
+    <rect x="96" y="28" width="28" height="4" rx="1"/>
+    <rect x="96" y="48" width="28" height="4" rx="1"/>
+    <rect x="114" y="38" width="10" height="4" rx="1"/>
+
+    <rect x="162" y="28" width="10" height="24" rx="1"/>
+    <rect x="162" y="28" width="34" height="4" rx="1"/>
+    <rect x="162" y="48" width="34" height="4" rx="1"/>
+    <rect x="176" y="38" width="10" height="4" rx="1"/>
+    <rect x="190" y="38" width="10" height="4" rx="1"/>
+  </g>
+</svg>
+

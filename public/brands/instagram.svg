@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80" viewBox="0 0 240 80" role="img" aria-label="Instagram">
+  <title>Instagram</title>
+  <rect x="10" y="10" width="60" height="60" rx="16" fill="none" stroke="#001F3F" stroke-width="4"/>
+  <circle cx="40" cy="40" r="14" fill="none" stroke="#001F3F" stroke-width="4"/>
+  <circle cx="56" cy="24" r="4" fill="#001F3F"/>
+  <text x="86" y="50" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="30" font-weight="700" fill="#001F3F">Instagram</text>
+</svg>
+

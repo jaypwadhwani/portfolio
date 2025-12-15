@@ -838,7 +838,7 @@ const Portfolio = () => {
                 <div>
                   <h4 className="font-bold text-lg mb-2" style={{ color: '#001F3F' }}>The Solution</h4>
                   <p style={{ color: '#5A7A9A' }}>
-                    TaskWhisper doesn't just transcribe—it understands intent. It processes raw audio, categorizes into tasks, assigns priorities, suggests sub-tasks, and emails/texts results so you don't forget.
+                    TaskWhisper doesn't just transcribe—it understands intent. It processes raw audio, categorizes into tasks, assigns priorities, suggests sub-tasks, and emails results so you don't forget.
                   </p>
                 </div>
 

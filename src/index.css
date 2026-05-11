@@ -21,11 +21,6 @@ body {
   position: relative;
   touch-action: pan-y;
 }
-
-@media (min-width: 1280px) {
-  body { zoom: 1.07; }
-}
-
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Libre Baskerville', serif;
 }
